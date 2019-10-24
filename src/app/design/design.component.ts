@@ -67,6 +67,7 @@ export class DesignComponent implements OnInit, OnDestroy {
   gridRequirementsString = '';
   showGuidesCheckbox = true;
   show3DViewButton = true;
+  designViewType = '';
 
   constructor(
     public route: ActivatedRoute,
@@ -280,6 +281,7 @@ export class DesignComponent implements OnInit, OnDestroy {
 
   setVisualProperties(feature) {
     this.api.checkToShowPricing();
+    this.designViewType = this.feature.getViewType();
     switch (feature) {
       case 'seeyond':
         this.showSeeyondOptions = true;
@@ -321,8 +323,8 @@ export class DesignComponent implements OnInit, OnDestroy {
       case 'clario-cloud':
         this.showDesign = true;
         this.showModify = true;
-        // this.showCanvasGridControls = true;
-        this.showCanvasGridControls = false;
+        this.showCanvasGridControls = true;
+        // this.showCanvasGridControls = false;
         this.show3DViewButton = false;
         break;
       case 'hushSwoon':
@@ -479,6 +481,9 @@ export class DesignComponent implements OnInit, OnDestroy {
       const dataURL = veloCanvas.toDataURL();
       this.feature.design_data_url = dataURL;
     } else if (this.feature.feature_type === 'clario-cloud') {
+      if (this.feature.canvasGridScale !== 1) {
+        this.zoomCanvasGrid('default');
+      }
       const ccCanvas = document.querySelector('canvas');
       const dataURL = ccCanvas.toDataURL();
       this.feature.design_data_url = dataURL;
@@ -549,6 +554,8 @@ export class DesignComponent implements OnInit, OnDestroy {
         return;
       }
       this.feature.canvasGridScale = Math.max(Number((this.feature.canvasGridScale - 0.1).toFixed(1)), 0.4);
+    } else if (direction === 'default') {
+      this.feature.canvasGridScale = 1.0;
     }
     this.feature.onZoomGrid.emit();
     this.feature.buildGrid();

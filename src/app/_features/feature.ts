@@ -489,33 +489,27 @@ export class Feature {
 
     variaSheetsNeeded = Math.ceil(veloVariaTiles / 8);
     variaDiffusionSheetsNeeded = Math.ceil(veloVariaDiffusionTiles / 8);
-    this.debug.log('feature', `varia sheets needed, ${variaSheetsNeeded}`);
-    this.debug.log('feature', `varia diffusion sheets needed ${variaDiffusionSheetsNeeded}`);
     products_amount = variaSheetsNeeded * variaSheetCost + variaDiffusionSheetsNeeded * variaDiffusionSheetCost;
 
     // SERVICES AMOUNT
     const veloFeltServiceCost = 79.57;
     const veloVariaServiceCost = 81.11;
-    this.services_amount = veloFeltTiles * veloFeltServiceCost + (veloVariaTiles + veloVariaDiffusionTiles) * veloVariaServiceCost;
-    // this.debug.logfeature', ('=== SERVICES AMOUNT ===');
-    // this.debug.logfeature', (this.services_amount);
+    this.services_amount = (veloFeltTiles * veloFeltServiceCost) + ((veloVariaTiles + veloVariaDiffusionTiles) * veloVariaServiceCost);
 
     // HARDWARE AMOUNT
     let hardware_amount: number;
     let hardwareCost = 0.0;
-    let cableCount: number;
-    let cableCost = 0.0;
-    const cableKitCost = 12.84;
     const variaConnectionKitCost = 7.06;
     const feltConnectionKitCost = 0.48;
     const drillBitCost = 11.08;
     const variaPunchToolCost = 18.02;
     let variaConnectionKitsNeeded = 0;
     let feltConnectionKitsNeeded = 0;
-    let cablesNeeded = 0;
     let variaPunchToolNeeded = false;
     let C1cableKit = 0;
+    const C1cableKitCost = 12.84;
     let C2cableKit = 0;
+    const C2cableKitCost = 14.54;
 
     // CABLE COST CALCULATION
     // we need to calculate the cable hardware for each individual island
@@ -533,41 +527,6 @@ export class Feature {
         C2cableKit += cableTypesNeeded[1];
         console.warn(`Cable Kit Totals: C1: ${C1cableKit}, C2: ${C2cableKit}`);
 
-        // ratio = (number_of_shared_edges / number_of_tiles)
-        // if ratio < 1 then cableCount = Math.ceil(cables * .75)
-        // if ratio > 1 then cableCount = Math.ceil(cables * .5)
-        // this is the total number of purchased tiles
-        // this is the number of tiles in the design
-
-        //     __          __  _____
-        //    / /_  ____  / /_/ __(_)  __
-        //   / __ \/ __ \/ __/ /_/ / |/_/
-        //  / / / / /_/ / /_/ __/ />  <
-        // /_/ /_/\____/\__/_/ /_/_/|_|
-
-        // August 27th 2018
-        // We are setting the cables to be 1:1 with the number of tiles
-        // in order to address an issue with cantilevered features
-        // until such time as we are able to create a more permanent fix.
-
-        // const ratio = sharedEdges / tilesInIsland;
-        // const factor = 1;
-        // cableCount = Math.ceil(tilesInIsland * factor);
-
-        // // If shared edges is 1 less than total tiles, set cableCount to sharedEdges
-        // if (sharedEdges + 1 === tilesInIsland) {
-        //   cableCount = sharedEdges;
-        // }
-        // // Minimum of 2 cables.
-        // cableCount = cableCount < 2 ? 2 : cableCount;
-        // cableCost += cableCount * cableKitCost;
-
-        cableCount = tilesInIsland;
-        cableCost += cableCount * cableKitCost;
-
-        // Add the cables for this island to the total cables needed
-        cablesNeeded += cableCount;
-
         // Calculate the hardware cost for connections and add to the hardware cost
         hardwareCost +=
           islandConnections['variaToVaria'] * variaConnectionKitCost +
@@ -576,23 +535,10 @@ export class Feature {
         // Add the connections to the running total
         variaConnectionKitsNeeded += islandConnections['variaToVaria'];
         feltConnectionKitsNeeded += islandConnections['variaToFelt'] + islandConnections['feltToFelt'];
-
-        this.debug.log('feature', `shared edges: ${sharedEdges}`);
-        this.debug.log('feature', `total tiles: ${tilesInIsland}`);
-        this.debug.log('feature', `connections ${islandConnections}`);
-        // this.debug.log('feature', `ratio: ${ratio}`);
-        // this.debug.log('feature', `factor: ${factor}`);
-        this.debug.log('feature', `cables: ${cableCount}`);
       }
     }
     // END CABLE COST CALCULATION
-
-    this.debug.log('feature', `Total Cable cost: ${cableCost}`);
-    this.debug.log('feature', `Total hardware cost: ${hardwareCost}`);
-    this.debug.log('feature', `Varia Kits needed: ${variaConnectionKitsNeeded}`);
-    this.debug.log('feature', `Felt Kits needed: ${feltConnectionKitsNeeded}`);
-    this.debug.log('feature', `Total cables needed: ${cablesNeeded}`);
-    hardware_amount = cableCost + hardwareCost + drillBitCost;
+    hardware_amount = (C1cableKit * C1cableKitCost) + (C2cableKit * C2cableKitCost) + hardwareCost + drillBitCost;
     if (this.veloHasVaria()) {
       hardware_amount += variaPunchToolCost;
       variaPunchToolNeeded = true;
@@ -603,7 +549,8 @@ export class Feature {
     // save the hardware amounts
     this.hardware = {
       '3-15-8812': 1, // drillBit
-      '3-15-1677-K': cablesNeeded,
+      '3-15-1677-K': C1cableKit,
+      '3-85-120-K': C2cableKit,
       '3-15-8899-K': variaConnectionKitsNeeded,
       '3-85-105-K': feltConnectionKitsNeeded,
       '3-15-8813': variaPunchToolNeeded ? 1 : 0
@@ -1004,7 +951,8 @@ export class Feature {
               ccPurchasedTiles[ccKey].purchased++;
               ccPurchasedTiles[ccKey].used++;
             } else {
-              const imageUrl = `/assets/images/clario-cloud/${ccTile.material}/${adjustedCCTileLabel(ccTile.tile)}-${ccTile.cloud_direction}-${ccTile.material}.png`;
+              let imageUrl = `/assets/images/clario-cloud/${ccTile.material}/${adjustedCCTileLabel(ccTile.tile)}-${ccTile.cloud_direction}-${ccTile.material}.png`;
+              imageUrl = imageUrl.replace(/_/g, '-');
               ccPurchasedTiles[ccKey] = {
                 purchased: 1,
                 image: imageUrl,
@@ -1342,8 +1290,10 @@ export class Feature {
           if (veloTiles[i].neighbors.hasOwnProperty(j)) {
             neighborCount++;
             const neighbor = this.findVeloTileAt(veloTiles[i].neighbors[j][0], veloTiles[i].neighbors[j][1]);
-            if (!!neighbor.material) {
-              actualNeighbors++;
+            if (!!neighbor) {
+              if (!!neighbor.material) {
+                actualNeighbors++;
+              }
             }
           }
         }
@@ -1370,6 +1320,8 @@ export class Feature {
       cableKit1 = Math.ceil(edgesArr[5] * 0.85) + Math.ceil(edgesArr[4] * 0.85) + Math.ceil(edgesArr[3] * 0.85) + Math.ceil(edgesArr[2] * 0.8);
       cableKit2 = edgesArr[1] + edgesArr[2];
     }
+    // any stand alone tiles need to have a second cableKit2 added
+    cableKit1 += edgesArr[0];
     return [cableKit1, cableKit2];
   }
 
@@ -1381,7 +1333,11 @@ export class Feature {
 
       tile.neighbors.map(neighborCoord => {
         const neighbor = this.findVeloTileAt(neighborCoord[0], neighborCoord[1]);
-        isNeighborArr.push(!!neighbor.material ? 1 : 0);
+        if (!neighbor) {
+          isNeighborArr.push(0);
+        } else {
+          isNeighborArr.push(!!neighbor.material ? 1 : 0);
+        }
       });
 
       const isNeighborArrTotal = isNeighborArr.reduce((a, b) => a + b, 0);
@@ -1742,5 +1698,23 @@ export class Feature {
     str = str.replace(/,/g, '/');
     this.discount_terms_string = str;
     return str;
+  }
+
+  getViewType() {
+    let imageHeader;
+    switch (this.feature_type) {
+      case 'tetria':
+      case 'clario':
+      case 'clario-cloud':
+      case 'velo':
+        imageHeader = 'Design Plan View';
+        break;
+      case 'hush':
+        imageHeader = 'Design Wall View';
+        break;
+      default:
+        imageHeader = 'Design';
+    }
+    return imageHeader;
   }
 }
