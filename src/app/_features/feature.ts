@@ -13,6 +13,7 @@ import { ifError } from 'assert';
 export class Feature {
   onBuildGrid = new EventEmitter();
   onBuildVeloGrid = new EventEmitter();
+  onBuildOldVeloGrid = new EventEmitter();
   onBuildClarioCloudGrid = new EventEmitter();
   onBuildSwoonGrid = new EventEmitter();
   onApplyAll = new EventEmitter();
@@ -48,7 +49,7 @@ export class Feature {
   public discount_terms = [50, 10];
   public discount_terms_string = '50/10';
   public discount_amount = 0.0;
-  public dealer_markup = 2.25;
+  public dealer_markup = 2.2222222222;
   public net_price = 0.0;
   public services_amount = 0.0;
   public showPricing = false;
@@ -72,6 +73,7 @@ export class Feature {
       twoByTwo: 0
     }
   };
+  public clipsRequested = false;
 
   // attributes for the tool
   public tile_type = 'tile';
@@ -82,11 +84,14 @@ export class Feature {
   public materialHex: string;
   public materialType: string;
   public diffusion: string;
-  public discontinuedMaterials: Array<string>;
-  public inactiveMaterials: Array<string>;
+  public discontinuedMaterials: Array<string> = [];
+  public inactiveMaterials: Array<string> = [];
   public canQuote = true;
   public isDuplicating = false;
   public clairoTileSizeType = 'standard';
+  public useOldVeloGrid = false;
+  public usesDiscontinuedMaterial = false;
+  public loadedDesign: any = null;
 
   public gridData: any;
   public toolsArray = this.materialsService.toolsArray;
@@ -242,7 +247,7 @@ export class Feature {
     }
     this.discontinuedMaterials = discontinuedMaterials;
     this.inactiveMaterials = inactiveMaterials;
-    this.checkMaterialsUsed();
+    this.checkForDeprecatedMaterials();
   }
 
   checkMaterialsUsed() {
@@ -280,6 +285,9 @@ export class Feature {
         });
       });
       // alert users if inactive materials are being used
+      if (matchedInactiveMaterials.length > 0) {
+        this.usesDiscontinuedMaterial = true;
+      }
       if (matchedInactiveMaterials.length === 1) {
         this.alert.error(`${matchedInactiveMaterials[0]} is being discontinued and is only available while supplies last.`);
       } else if (matchedInactiveMaterials.length > 1) {
@@ -288,6 +296,7 @@ export class Feature {
         this.alert.error(`${alertStr} are being discontinued and are only available while supplies last.`);
       }
     }
+
     if (this.discontinuedMaterials.length > 0) {
       // loop through gridData looking for discontinued materials
       this.discontinuedMaterials.map(material => {
@@ -315,6 +324,9 @@ export class Feature {
       });
       // if discontinued materials are found disable quote and alert user
       if (matchedDiscontinuedMaterials.length > 0) {
+        if (matchedDiscontinuedMaterials.length > 0) {
+          this.usesDiscontinuedMaterial = true;
+        }
         this.canQuote = false;
         if (matchedDiscontinuedMaterials.length === 1) {
           this.alert.error(`The ${matchedDiscontinuedMaterials[0]} material has been discontinued. Select a new color to proceed.`);
@@ -331,8 +343,10 @@ export class Feature {
   }
 
   getTetriaEstimate(tilesArray) {
-    const flatTilePrice = 63.65;
-    const tetriaTilePrice = 84.87;
+    const tetriaTilePricing = this.pricesService.tetriaPricingData;
+    const flatTilePrice = tetriaTilePricing.servicePrices.flatTilePrice;
+    const tetriaTilePrice = tetriaTilePricing.servicePrices.tetriaTilePrice;
+    const clipsPrice = tetriaTilePricing.partsList['3-15-2415'];
     let flatTileCount = 0;
     let tetriaTileCount = 0;
     const tetriaTiles = ['01', '02', '03'];
@@ -350,8 +364,10 @@ export class Feature {
         }
       }
     }
+
+    const hardware_amount = this.clipsRequested ? (flatTileCount + tetriaTileCount) * clipsPrice * 2 : 0;
     this.services_amount = tetriaTileCount * tetriaTilePrice + flatTileCount * flatTilePrice;
-    this.estimated_amount = this.services_amount;
+    this.estimated_amount = this.services_amount + hardware_amount;
   }
 
   getHushBlocksEstimate(tilesArray) {
@@ -417,15 +433,19 @@ export class Feature {
   }
 
   getClarioEstimate(tilesArray) {
+    const clarioPrices = this.pricesService.clarioPricingData;
     let products_amount = 0.0;
+    let hardware_amount = 0.0;
     let clario24TileCount = 0;
     let clario48TileCount = 0;
     let clario00TileCount = 0;
     let sheetsNeeded = 0;
     let sheetCost = 0.0;
+    let totalNumTiles = 0;
     for (const tile in tilesArray) {
       if (tilesArray.hasOwnProperty(tile)) {
         const currentTile = tilesArray[tile];
+        totalNumTiles = totalNumTiles + currentTile.purchased;
         if (currentTile.tile === '24' || currentTile.tile === '600' || currentTile.tile === '625') {
           // 24x24 prices
           clario24TileCount += currentTile.purchased;
@@ -448,10 +468,16 @@ export class Feature {
       }
     }
 
+    this.hardware = this.clipsRequested ?
+      {'3-15-2415': totalNumTiles * 2 } :
+      null;
+    hardware_amount = this.clipsRequested ? totalNumTiles * clarioPrices.partsList['3-15-2415'] * 2 : 0;
+    console.log('hardware:', this.hardware);
+
     // SERVICES AMOUNT
-    const clarioFlatServiceCost = 24.52;
-    const clario24ServiceCost = 51.38;
-    const clario48ServiceCost = 102.74;
+    const clarioFlatServiceCost = clarioPrices.servicePrices.flatTilePrice;
+    const clario24ServiceCost = clarioPrices.servicePrices.clario24Price;
+    const clario48ServiceCost = clarioPrices.servicePrices.clario48Price;
     const clario24Total = clario24ServiceCost * clario24TileCount;
     const clario48Total = clario48ServiceCost * clario48TileCount;
     const clarioFlatTotal = clario00TileCount * clarioFlatServiceCost;
@@ -459,10 +485,11 @@ export class Feature {
     this.services_amount = clarioFlatTotal + clario24Total + clario48Total;
     // END SERVICES AMOUNT
 
-    this.estimated_amount = this.services_amount + products_amount;
+    this.estimated_amount = this.services_amount + products_amount + hardware_amount;
   }
 
   getVeloEstimate(tilesArray) {
+    const veloPrices = this.pricesService.veloPricingData;
     // PRODUCTS AMOUNT
     let veloFeltTiles = 0;
     let veloVariaTiles = 0;
@@ -470,8 +497,8 @@ export class Feature {
     let products_amount: number;
     let variaSheetsNeeded: number;
     let variaDiffusionSheetsNeeded: number;
-    const variaSheetCost = 508.16;
-    const variaDiffusionSheetCost: number = variaSheetCost + 105.0;
+    const variaSheetCost = veloPrices.servicePrices.variaSheetCost;
+    const variaDiffusionSheetCost: number = variaSheetCost + veloPrices.servicePrices.variaDiffusionAdditionalCost;
 
     for (const tile in tilesArray) {
       if (tilesArray.hasOwnProperty(tile)) {
@@ -493,24 +520,24 @@ export class Feature {
     products_amount = variaSheetsNeeded * variaSheetCost + variaDiffusionSheetsNeeded * variaDiffusionSheetCost;
 
     // SERVICES AMOUNT
-    const veloFeltServiceCost = 79.57;
-    const veloVariaServiceCost = 81.11;
+    const veloFeltServiceCost = veloPrices.servicePrices.feltCost;
+    const veloVariaServiceCost = veloPrices.servicePrices.variaCost;
     this.services_amount = (veloFeltTiles * veloFeltServiceCost) + ((veloVariaTiles + veloVariaDiffusionTiles) * veloVariaServiceCost);
 
     // HARDWARE AMOUNT
     let hardware_amount: number;
     let hardwareCost = 0.0;
-    const variaConnectionKitCost = 7.06;
-    const feltConnectionKitCost = 0.48;
-    const drillBitCost = 11.08;
-    const variaPunchToolCost = 18.02;
+    const variaConnectionKitCost = veloPrices.hardwarePrices.variaConnectionKitCost;
+    const feltConnectionKitCost = veloPrices.hardwarePrices.feltConnectionKitCost;
+    const drillBitCost = veloPrices.hardwarePrices.drillBitCost;
+    const variaPunchToolCost = veloPrices.hardwarePrices.variaPunchToolCost;
     let variaConnectionKitsNeeded = 0;
     let feltConnectionKitsNeeded = 0;
     let variaPunchToolNeeded = false;
     let C1cableKit = 0;
-    const C1cableKitCost = 12.84;
+    const C1cableKitCost = veloPrices.hardwarePrices.C1cableKitCost;
     let C2cableKit = 0;
-    const C2cableKitCost = 14.54;
+    const C2cableKitCost = veloPrices.hardwarePrices.C2cableKitCost;
 
     // CABLE COST CALCULATION
     // we need to calculate the cable hardware for each individual island
@@ -526,7 +553,6 @@ export class Feature {
         const cableTypesNeeded = this.getVeloCables(island, sharedEdges);
         C1cableKit += cableTypesNeeded[0];
         C2cableKit += cableTypesNeeded[1];
-        console.warn(`Cable Kit Totals: C1: ${C1cableKit}, C2: ${C2cableKit}`);
 
         // Calculate the hardware cost for connections and add to the hardware cost
         hardwareCost +=
@@ -566,16 +592,18 @@ export class Feature {
     // "S" tiles have different hardware and fab pricing because is being treated as a simplespec item
     // cc indicates all the other clario-cloud tiles that aren't "S"
 
+    const clarioCloudPrices = this.pricesService.clarioCloudPricingData;
+
     let ccTileCount = 0;
     let sTileCount = 0;
 
-    const sTileHardwareCost = 51.36;
-    const sTileServicesCost = 346.21;
-    const sTileProductsCost = 82.43;
+    const sTileHardwareCost = clarioCloudPrices.hardwarePrices.sTile;
+    const sTileServicesCost = clarioCloudPrices.servicePrices.sTile;
+    const sTileProductsCost = clarioCloudPrices.productsPrices.sTile;
 
-    const ccTileHardwareCost = 45.60;
-    const ccTileServicesCost = 351.97;
-    const ccTileProductsCost = 82.43;
+    const ccTileHardwareCost = clarioCloudPrices.hardwarePrices.ccTile;
+    const ccTileServicesCost = clarioCloudPrices.servicePrices.ccTile;
+    const ccTileProductsCost = clarioCloudPrices.productsPrices.ccTile;
 
     const dataArray = !!tilesArray ? tilesArray : this.gridData;
     for (const ccTile in dataArray) {
@@ -693,7 +721,7 @@ export class Feature {
     // If the feature type is velo build that grid
     if (this.feature_type === 'velo') {
       this.debug.log('feature', 'emitting event buildVeloGrid');
-      this.onBuildVeloGrid.emit();
+      this.useOldVeloGrid ? this.onBuildOldVeloGrid.emit() : this.onBuildVeloGrid.emit();
     } else if (this.feature_type === 'clario-cloud') {
       this.debug.log('feature', 'emitting event buildClarioCloudGrid');
       this.onBuildClarioCloudGrid.emit();
@@ -722,7 +750,7 @@ export class Feature {
   toggleGuide() {
     this.showGuide = !this.showGuide;
     if (this.feature_type === 'velo') {
-      this.onBuildVeloGrid.emit();
+      this.useOldVeloGrid ? this.onBuildOldVeloGrid.emit() : this.onBuildVeloGrid.emit();
     }
 
     if (this.feature_type === 'clario-cloud') {
@@ -921,7 +949,7 @@ export class Feature {
                 purchased: veloPkgQty,
                 image:
                   gridTiles[tile].materialType === 'felt'
-                    ? '/assets/images/materials/felt/merino/' + gridTiles[tile].material + '.png'
+                    ? '/assets/images/materials/felt/sola/' + gridTiles[tile].material + '.png'
                     : '/assets/images/tiles/00/' + gridTiles[tile].material + '.png',
                 hex: gridTiles[tile].materialType === 'varia' ? gridTiles[tile].hex : '',
                 convex: gridTiles[tile].tile === 'convex' ? 1 : 0,
@@ -965,35 +993,6 @@ export class Feature {
           }
         }
         tiles = ccPurchasedTiles;
-        break;
-      case 'hushSwoon':
-        const hsPkgQty: number = this.getPackageQty();
-        const hsGridTiles = this.veloTiles();
-        let hsPurchasedTiles: {};
-
-        for (const tile in hsGridTiles) {
-          if (hsGridTiles.hasOwnProperty(tile)) {
-            const materialType = hsGridTiles[tile].materialType;
-            const material = hsGridTiles[tile].material;
-            const key = `${material}`;
-            if (hsPurchasedTiles === undefined) {
-              hsPurchasedTiles = {};
-            }
-            if (!!hsPurchasedTiles[key]) {
-              hsPurchasedTiles[key].purchased++;
-            } else {
-              hsPurchasedTiles[key] = {
-                purchased: hsPkgQty,
-                image: `/assets/images/tiles/hush-swoon/felt/merino/${hsGridTiles[tile].material}.png`,
-                hex: hsGridTiles[tile].hex,
-                material: hsGridTiles[tile].material,
-                materialType: hsGridTiles[tile].materialType,
-                tile: 'hush-swoon'
-              };
-            }
-          }
-        }
-        tiles = hsPurchasedTiles;
         break;
 
       case 'clario':
@@ -1208,7 +1207,6 @@ export class Feature {
         hushSwoonTiles.push(this.gridData[tile]);
       }
     }
-    console.log('hushSwoonTiles:', hushSwoonTiles);
     hushSwoonTiles.map(tile => {
       switch (tile.rotation) {
         case 0.5235987755982988:
@@ -1302,14 +1300,6 @@ export class Feature {
         edgesArr[actualNeighbors]++;
       }
     }
-
-    // adjust count of tiles to start at 1
-
-    // test for just one edge (if it's an end piece)
-    // test for two adjacent neighbors in the loop or first/last only
-
-    console.log('shared edges/tiles ratio:', ratio);
-    console.log(`E1=${edgesArr[1]}, E2=${edgesArr[2]}, E3=${edgesArr[3]}, E4=${edgesArr[4]}, E5=${edgesArr[5]}`);
 
     if (ratio <= 1.15) {
       cableKit1 = Math.ceil(edgesArr.reduce((a, b) => a + b) * 0.75);
@@ -1599,10 +1589,7 @@ export class Feature {
         requiredMaterials = this.materials.felt.sola;
         break;
       case 'tetria':
-        requiredMaterials = this.materials.felt.merino;
-        break;
-      case 'hushSwoon':
-        requiredMaterials = this.materials.felt.merino;
+        requiredMaterials = this.materials.felt.sola;
         break;
       case 'clario':
         requiredMaterials = this.materials.felt.sola;
@@ -1612,7 +1599,7 @@ export class Feature {
         break;
       case 'velo':
         requiredMaterials = { felt: undefined, varia: undefined };
-        requiredMaterials.felt = this.materials.felt.merino;
+        requiredMaterials.felt = this.materials.felt.sola;
         if (!this.materials.varia.color[251]) {
           this.materials.varia.color = this.addNoColorToVariaObj();
         }
@@ -1737,5 +1724,27 @@ export class Feature {
       this.isDuplicating = false;
       return false;
     }
+  }
+
+  checkVeloOldMaterials() {
+    return this.usesDiscontinuedMaterial = this.loadedDesign && (this.loadedDesign.tiles.includes('merino') || this.loadedDesign.tiles.includes('varia'));
+  }
+
+  checkForDeprecatedMaterials(design?) {
+    design = design || this.loadedDesign;
+    if (this.discontinuedMaterials.length === 0 || this.inactiveMaterials.length === 0) {
+      this.getDeprecatedMaterials();
+    }
+    const designStr = design ? JSON.stringify(design.tiles) : '';
+    this.inactiveMaterials.forEach(inactMat => {
+      if (designStr.includes(inactMat.toLowerCase())) {
+        this.usesDiscontinuedMaterial = true;
+      }
+    })
+    this.discontinuedMaterials.forEach(discMat => {
+      if (designStr.includes(discMat.toLowerCase())) {
+        this.usesDiscontinuedMaterial = true;
+      }
+    })
   }
 }
