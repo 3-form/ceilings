@@ -40,10 +40,18 @@ pipeline {
 
     stage("Deploy") {
       steps {
-        sh "scp ./docker-compose.production.yml webmaster@192.168.31.38:/home/webmaster/design-production/docker-compose.yml"
-        sh "ssh webmaster@192.168.31.38 '/home/webmaster/design-production/deploy.sh'"
-        cleanWs()
+        sh '''
+          export DOCKER_HOST=ssh://webmaster@192.168.42.79
+
+          docker service update --image "$REGISTRY:$BRANCH_NAME" --with-registry-auth "${BRANCH_NAME}_design"
+        '''
       }
+    }
+  }
+
+  post {
+    always {
+      cleanWs()
     }
   }
 }
