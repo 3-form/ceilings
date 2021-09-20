@@ -529,7 +529,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'Emerald',
           hex: '#273c39',
-          sheet_part_id: '0-51-921'
+          sheet_part_id: '0-51-968'
         },
         driftwood: {
           material: 'driftwood',
@@ -637,7 +637,7 @@ export class MaterialsService {
           available_until: 'Spring 2021',
           name_str: 'Hunter',
           hex: '#273c39',
-          sheet_part_id: '0-51-968'
+          sheet_part_id: '0-51-921'
         },
         burnt_umber: {
           material: 'burnt_umber',
