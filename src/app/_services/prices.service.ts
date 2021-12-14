@@ -38,44 +38,44 @@ export class PricesService {
       }
     },
     servicePrices: {
-      '1-1-2': 18.58,
-      '1-2-2': 32.21,
-      '1-3-2': 62.94,
-      '1-4-2': 85.54,
-      '2-2-2': 84.48,
-      '2-2-2-t': 35.94,
+      '1-1-2': 19.70,
+      '1-2-2': 34.14,
+      '1-3-2': 66.71,
+      '1-4-2': 90.67,
+      '2-2-2': 89.55,
+      '2-2-2-t': 38.09,
     },
     hardwarePrices: {
       '3-85-110': 0.26,
-      '3-85-111': 1.94,
-      '3-85-112': 5.67,
-      '3-85-116': 1.25,
-      '3-85-115': 3.24,
-      '3-85-117': 4.17,
-      '3-85-118': 5.67,
-      '3-85-119': 5.67,
+      '3-85-111': 1.98,
+      '3-85-112': 5.78,
+      '3-85-116': 1.28,
+      '3-85-115': 3.30,
+      '3-85-117': 4.26,
+      '3-85-118': 5.78,
+      '3-85-119': 5.78,
     }
   };
 
   public tetriaPricingData = {
     partsList: {
-      '3-15-2415': 0.73
+      '3-15-2415': 0.74
     },
     servicePrices: {
-      flatTilePrice: 88.73,
-      tetriaTilePrice: 88.73,
+      flatTilePrice: 94.06,
+      tetriaTilePrice: 94.06,
     },
     hardwarePrices: {},
   }
 
   public clarioPricingData = {
     partsList: {
-      '3-15-2415': 0.73
+      '3-15-2415': 0.74
     },
     servicePrices: {
-      flatTilePrice: 25.95,
-      clario24Price: 54.03,
-      clario48Price: 108.07,
+      flatTilePrice: 27.17,
+      clario24Price: 56.94,
+      clario48Price: 113.85,
     },
     hardwarePrices: {},
   }
@@ -83,34 +83,34 @@ export class PricesService {
   public veloPricingData = {
     partsList: {},
     servicePrices: {
-      variaSheetCost: 531.28,
-      variaDiffusionAdditionalCost: 109.78,
-      feltCost: 83.19,
-      variaCost: 84.80,
+      variaSheetCost: 547.22,
+      variaDiffusionAdditionalCost: 116.36,
+      feltCost: 85.68,
+      variaCost: 87.34,
     },
     hardwarePrices: {
-      variaConnectionKitCost: 7.38,
-      feltConnectionKitCost: 0.50,
-      drillBitCost: 11.58,
-      variaPunchToolCost: 18.84,
-      C1cableKitCost: 13.43,
-      C2cableKitCost: 15.20,
+      variaConnectionKitCost: 7.53,
+      feltConnectionKitCost: 0.51,
+      drillBitCost: 11.81,
+      variaPunchToolCost: 19.22,
+      C1cableKitCost: 13.70,
+      C2cableKitCost: 15.50,
     },
   }
 
   public clarioCloudPricingData = {
     partsList: {},
     servicePrices: {
-      sTile: 361.96,
-      ccTile: 367.99,
+      sTile: 383.68,
+      ccTile: 390.06,
     },
     hardwarePrices: {
-      sTile: 53.70,
-      ccTile: 47.67,
+      sTile: 54.77,
+      ccTile: 48.63,
     },
     productsPrices: {
-      sTile: 86.18,
-      ccTile: 86.18,
+      sTile: 88.77,
+      ccTile: 88.77,
     }
   }
 
