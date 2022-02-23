@@ -33,20 +33,9 @@ export class ApiService {
     private materialsService: MaterialsService,
   ) {}
 
-  get allClarioFromOverseas() {
-    let allClarioFromOverseas = true;
-    (Object.values(this.feature.tiles) as any).forEach(tile => {
-      if (!this.materialsService.overSeasClarioPartIds.includes(tile.partId)) {
-        allClarioFromOverseas = false;
-      }
-    });
-    return allClarioFromOverseas;
-  }
-
   get patchData() {
     const { feature } = this;
     let hushShippingInfo;
-    let allClarioFromOverseas;
     const featureType = this.feature.setFeatureType(feature.feature_type);
     const currentPath = this.location.path();
     let duplicatedFromId = null;
@@ -60,7 +49,7 @@ export class ApiService {
     }
 
     if (featureType === 'clario') {
-      allClarioFromOverseas = this.allClarioFromOverseas;
+      this.checkClarioOverseasValidity();
     }
 
     if (feature.is_quantity_order) {
@@ -97,8 +86,46 @@ export class ApiService {
       is_quantity_order: feature.is_quantity_order,
       hush_shipping_info: JSON.stringify(hushShippingInfo),
       duplicated_from_id: duplicatedFromId,
-      clario_from_overseas: allClarioFromOverseas,
     }
+  }
+
+
+  checkClarioOverseasValidity() {
+    const tilesInFeature = Object.keys(this.feature.tiles);
+    const colorsFromOverseas = this.materialsService.overSeasClarioColors;
+
+    const overseasEligible = [];
+    const overseasIneligible = [];
+
+    tilesInFeature.forEach(tile => {
+      const color = tile.split("-")[0];
+      const tileType = tile.split("-")[1];
+
+      if (
+        overseasEligible.indexOf(color) > 0
+      ) {
+        overseasEligible.splice(overseasEligible.indexOf(color), 1)
+        overseasIneligible.push(color);
+      } else if (
+        colorsFromOverseas.includes(color) &&
+        !overseasEligible.includes(color) &&
+        !overseasIneligible.includes(color) &&
+        tileType === '24'
+      ) {
+        overseasEligible.push(color);
+      } else {
+        overseasIneligible.push(color);
+      }
+    });
+
+    if (overseasEligible.length > 0) {
+      this.addOverseasIndicator(overseasEligible);
+    }
+  }
+
+  addOverseasIndicator(overseasEligible) {
+    console.log('break here:', this.feature.tiles);
+    // TODO: ADD A -V TO EACH OF THE this.feature.tiles.${color-24}.partId
   }
 
   getMyDesigns() {

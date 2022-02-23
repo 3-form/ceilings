@@ -564,12 +564,12 @@ export class MaterialsService {
     },
   };
 
-  public overSeasClarioPartIds = [
-    '3-51-907',
-    '3-51-908',
-    '3-51-909',
-    '3-51-910',
-    '3-51-913',
+  public overSeasClarioColors = [
+    'nickel',
+    'armor',
+    'cast',
+    'mineral',
+    'zinc',
   ]
 
   public materials = {
