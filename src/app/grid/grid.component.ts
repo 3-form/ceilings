@@ -330,7 +330,6 @@ export class GridComponent implements OnInit, OnDestroy {
         this.debug.log('grid-component', 'this and column to right');
       }
     }
-    console.log("currentTile:", currentTile);
   }
 
   isEdgeTile(row, column) {
