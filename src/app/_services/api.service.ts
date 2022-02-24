@@ -7,6 +7,7 @@ import { AlertService } from './alert.service';
 import { Feature } from '../_features/feature';
 import { User } from '../_models/user';
 import { DebugService } from './../_services/debug.service';
+import { PricesService } from '../_services/prices.service';
 
 import { map, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
@@ -31,6 +32,7 @@ export class ApiService {
     private alert: AlertService,
     private location: Location,
     private materialsService: MaterialsService,
+    private pricesService: PricesService,
   ) {}
 
   get patchData() {
@@ -97,6 +99,13 @@ export class ApiService {
     const overseasEligible = [];
     const overseasIneligible = [];
 
+    // A clario baffle is available for fulfilment from overseas only if it is
+    // from the list of colors provided, and if it only has the -24 type of tile
+    // being used in the feature (to match dye lots).
+    // If that criteria is met then add a -v on the end of the part id so that
+    // the API can check inventory levels and indicate where the stock needs
+    // to come from to fulfill the order
+
     tilesInFeature.forEach(tile => {
       const color = tile.split("-")[0];
       const tileType = tile.split("-")[1];
@@ -107,6 +116,7 @@ export class ApiService {
         overseasEligible.splice(overseasEligible.indexOf(color), 1)
         overseasIneligible.push(color);
       } else if (
+        this.feature.grid_type === '15/16' &&
         colorsFromOverseas.includes(color) &&
         !overseasEligible.includes(color) &&
         !overseasIneligible.includes(color) &&
@@ -124,8 +134,11 @@ export class ApiService {
   }
 
   addOverseasIndicator(overseasEligible) {
-    console.log('break here:', this.feature.tiles);
-    // TODO: ADD A -V TO EACH OF THE this.feature.tiles.${color-24}.partId
+    overseasEligible.forEach(color => {
+      color = `${color}-24`;
+      this.feature.tiles[color].tile = `${this.feature.tiles[color].tile}-v`;
+      this.feature.tiles[color]['unitPrice'] = this.pricesService.clarioPricingData.servicePrices.clario24Price
+    })
   }
 
   getMyDesigns() {
