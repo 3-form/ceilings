@@ -1,3 +1,4 @@
+import { MaterialsService } from 'app/_services/materials.service';
 import { Injectable, EventEmitter } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpRequest, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 
@@ -6,6 +7,7 @@ import { AlertService } from './alert.service';
 import { Feature } from '../_features/feature';
 import { User } from '../_models/user';
 import { DebugService } from './../_services/debug.service';
+import { PricesService } from '../_services/prices.service';
 
 import { map, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
@@ -28,8 +30,116 @@ export class ApiService {
     private user: User,
     private debug: DebugService,
     private alert: AlertService,
-    private location: Location
+    private location: Location,
+    private materialsService: MaterialsService,
+    private pricesService: PricesService,
   ) {}
+
+  get patchData() {
+    const { feature } = this;
+    let hushShippingInfo;
+    const featureType = this.feature.setFeatureType(feature.feature_type);
+    const currentPath = this.location.path();
+    let duplicatedFromId = null;
+    this.addPartIdsToTiles();
+    if (currentPath.includes('duplicate')) {
+      duplicatedFromId = feature.id;
+    }
+
+    if (featureType === 'hush') {
+      hushShippingInfo = feature.hushShippingInfo;
+    }
+
+    if (featureType === 'clario') {
+      this.checkClarioOverseasValidity();
+    }
+
+    if (feature.is_quantity_order) {
+      this.prepDataForQtyOrder();
+    }
+
+    return {
+      id: feature.id,
+      uid: this.user.uid,
+      feature_type: featureType,
+      design_name: feature.design_name,
+      project_name: feature.project_name,
+      specifier: feature.specifier,
+      width: feature.width || 0,
+      length: feature.length || 0,
+      units: feature.units,
+      material: feature.material,
+      tile_size: feature.tile_size,
+      grid_type: feature.grid_type,
+      tiles: JSON.stringify(feature.tiles),
+      design_data_url: feature.design_data_url,
+      hardware: !!feature.hardware ? JSON.stringify(feature.hardware) : null,
+      estimated_amount: feature.estimated_amount,
+      services_amount: feature.services_amount,
+      list_price: feature.list_price,
+      discount_terms: JSON.stringify(feature.discount_terms),
+      discount_amount: feature.discount_amount,
+      net_price: feature.net_price,
+      dealer_markup: feature.dealer_markup,
+      grid_data: JSON.stringify(feature.gridData),
+      quoted: feature.quoted,
+      archived: feature.archived,
+      quantity: feature.quantity,
+      is_quantity_order: feature.is_quantity_order,
+      hush_shipping_info: JSON.stringify(hushShippingInfo),
+      duplicated_from_id: duplicatedFromId,
+    }
+  }
+
+
+  checkClarioOverseasValidity() {
+    const tilesInFeature = Object.keys(this.feature.tiles);
+    const colorsFromOverseas = this.materialsService.overSeasClarioColors;
+
+    const overseasEligible = [];
+    const overseasIneligible = [];
+
+    // A clario baffle is available for fulfilment from overseas only if it is
+    // from the list of colors provided, and if it only has the -24 type of tile
+    // being used in the feature (to match dye lots).
+    // If that criteria is met then add a -v on the end of the part id so that
+    // the API can check inventory levels and indicate where the stock needs
+    // to come from to fulfill the order
+
+    tilesInFeature.forEach(tile => {
+      const color = tile.split("-")[0];
+      const tileType = tile.split("-")[1];
+
+      if (
+        overseasEligible.indexOf(color) > 0
+      ) {
+        overseasEligible.splice(overseasEligible.indexOf(color), 1)
+        overseasIneligible.push(color);
+      } else if (
+        this.feature.grid_type === '15/16' &&
+        colorsFromOverseas.includes(color) &&
+        !overseasEligible.includes(color) &&
+        !overseasIneligible.includes(color) &&
+        tileType === '24'
+      ) {
+        overseasEligible.push(color);
+      } else {
+        overseasIneligible.push(color);
+      }
+    });
+
+    if (overseasEligible.length > 0) {
+      this.addOverseasIndicator(overseasEligible);
+    }
+  }
+
+  addOverseasIndicator(overseasEligible) {
+    overseasEligible.forEach(color => {
+      color = `${color}-24`;
+      this.feature.tiles[color].tile = `${this.feature.tiles[color].tile}-v`;
+      this.feature.tiles[color]['unitPrice'] = this.pricesService.clarioPricingData.servicePrices.clario24Price
+    })
+  }
 
   getMyDesigns() {
     return this.http.get(this.apiUrl + 'list/' + this.user.uid).pipe(catchError(this.handleError));
@@ -45,47 +155,35 @@ export class ApiService {
     return this.http.get<any>(this.apiUrl + id);
   }
 
+  addPartIdsToTiles(){
+    const { feature } = this;
+    const featureType = feature.feature_type;
+    (Object.values(feature.tiles) as any).forEach(tile => {
+      const partsListKey = this.getpartsListKey(tile);
+      if (!!partsListKey) {
+        const partIds = this.materialsService.partIds[featureType][partsListKey];
+        if (partIds) {
+          const material = tile.material;
+          tile.partId = partIds[material];
+        }
+      }
+    });
+  }
+
+  getpartsListKey(tile) {
+    const { feature } = this;
+    let key = null;
+    switch (feature.feature_type) {
+      case 'clario':
+        key = `${tile.tile}-${feature.grid_type}`;
+    }
+    return key;
+  }
+
   updateDesign() {
     this.debug.log('api', 'updating design');
-    // we can't forget about the hardware...
     this.debug.log('api', this.feature.tiles);
-    let hushShippingInfo;
-    if (this.feature.feature_type === 'hush') {
-      hushShippingInfo = this.feature.hushShippingInfo;
-    }
-    if (this.feature.is_quantity_order) {
-      this.prepDataForQtyOrder();
-    }
-    const patchData = {
-      id: this.feature.id,
-      uid: this.user.uid,
-      feature_type: this.feature.feature_type,
-      design_name: this.feature.design_name,
-      project_name: this.feature.project_name,
-      specifier: this.feature.specifier,
-      width: this.feature.width || 0,
-      length: this.feature.length || 0,
-      units: this.feature.units,
-      material: this.feature.material,
-      tile_size: this.feature.tile_size,
-      grid_type: this.feature.grid_type,
-      tiles: JSON.stringify(this.feature.tiles),
-      design_data_url: this.feature.design_data_url,
-      hardware: !!this.feature.hardware ? JSON.stringify(this.feature.hardware) : null,
-      estimated_amount: this.feature.estimated_amount,
-      services_amount: this.feature.services_amount,
-      list_price: this.feature.list_price,
-      discount_terms: JSON.stringify(this.feature.discount_terms),
-      discount_amount: this.feature.discount_amount,
-      net_price: this.feature.net_price,
-      dealer_markup: this.feature.dealer_markup,
-      grid_data: JSON.stringify(this.feature.gridData),
-      quoted: this.feature.quoted,
-      archived: this.feature.archived,
-      quantity: this.feature.quantity,
-      is_quantity_order: this.feature.is_quantity_order,
-      hush_shipping_info: JSON.stringify(hushShippingInfo)
-    };
+    const patchData = this.patchData;
 
     return this.http.patch(this.apiUrl + this.feature.id, patchData).pipe(
       map((res: any) => {
@@ -99,49 +197,7 @@ export class ApiService {
 
   saveDesign() {
     this.debug.log('api', 'saving design');
-    const featureType = this.feature.setFeatureType(this.feature.feature_type);
-    let hushShippingInfo;
-    let duplicatedFromId;
-    const currentPath = this.location.path();
-    if (currentPath.includes('duplicate')) {
-      duplicatedFromId = this.feature.id;
-    }
-    if (this.feature.feature_type === 'hush') {
-      hushShippingInfo = this.feature.hushShippingInfo;
-    }
-    if (this.feature.is_quantity_order) {
-      this.prepDataForQtyOrder();
-    }
-    const patchData = {
-      uid: this.user.uid,
-      feature_type: featureType,
-      design_name: this.feature.design_name,
-      project_name: this.feature.project_name,
-      specifier: this.feature.specifier,
-      width: this.feature.width || 0,
-      length: this.feature.length || 0,
-      units: this.feature.units,
-      material: this.feature.material,
-      tile_size: this.feature.tile_size,
-      grid_type: this.feature.grid_type,
-      tiles: JSON.stringify(this.feature.tiles),
-      design_data_url: this.feature.design_data_url,
-      hardware: !!this.feature.hardware ? JSON.stringify(this.feature.hardware) : null,
-      estimated_amount: this.feature.estimated_amount,
-      services_amount: this.feature.services_amount,
-      list_price: this.feature.list_price,
-      discount_terms: JSON.stringify(this.feature.discount_terms),
-      discount_amount: this.feature.discount_amount,
-      net_price: this.feature.net_price,
-      dealer_markup: this.feature.dealer_markup,
-      grid_data: JSON.stringify(this.feature.gridData),
-      quoted: this.feature.quoted,
-      archived: this.feature.archived,
-      quantity: this.feature.quantity,
-      is_quantity_order: this.feature.is_quantity_order,
-      hush_shipping_info: JSON.stringify(hushShippingInfo),
-      duplicated_from_id: duplicatedFromId
-    };
+    const patchData = this.patchData;
 
     return this.http.post(this.apiUrl, patchData).pipe(
       map((res: any) => {
