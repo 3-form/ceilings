@@ -74,7 +74,7 @@ export class PricesService {
     },
     servicePrices: {
       flatTilePrice: 27.17,
-      clario24Price: 36.29,
+      clario24Price: 36.165,
       clario48Price: 113.85,
     },
     hardwarePrices: {},
