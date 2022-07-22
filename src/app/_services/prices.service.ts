@@ -38,32 +38,32 @@ export class PricesService {
       }
     },
     servicePrices: {
-      '1-1-2': 19.70,
-      '1-2-2': 34.14,
-      '1-3-2': 66.71,
-      '1-4-2': 90.67,
-      '2-2-2': 89.55,
-      '2-2-2-t': 38.09,
+      '1-1-2': 23.24,
+      '1-2-2': 40.28,
+      '1-3-2': 78.72,
+      '1-4-2': 106.99,
+      '2-2-2': 105.67,
+      '2-2-2-t': 44.95,
     },
     hardwarePrices: {
-      '3-85-110': 0.26,
-      '3-85-111': 1.98,
-      '3-85-112': 5.78,
-      '3-85-116': 1.28,
-      '3-85-115': 3.30,
-      '3-85-117': 4.26,
-      '3-85-118': 5.78,
-      '3-85-119': 5.78,
+      '3-85-110': 0.31,
+      '3-85-111': 2.33,
+      '3-85-112': 6.82,
+      '3-85-116': 1.51,
+      '3-85-115': 3.90,
+      '3-85-117': 5.02,
+      '3-85-118': 6.82,
+      '3-85-119': 6.82,
     }
   };
 
   public tetriaPricingData = {
     partsList: {
-      '3-15-2415': 0.74
+      '3-15-2415': 0.83
     },
     servicePrices: {
-      flatTilePrice: 94.06,
-      tetriaTilePrice: 94.06,
+      flatTilePrice: 104.40,
+      tetriaTilePrice: 104.40,
     },
     hardwarePrices: {},
   }
@@ -83,34 +83,34 @@ export class PricesService {
   public veloPricingData = {
     partsList: {},
     servicePrices: {
-      variaSheetCost: 547.22,
-      variaDiffusionAdditionalCost: 116.36,
-      feltCost: 85.68,
-      variaCost: 87.34,
+      variaSheetCost: 596.47,
+      variaDiffusionAdditionalCost: 126.84,
+      feltCost: 93.40,
+      variaCost: 95.20,
     },
     hardwarePrices: {
-      variaConnectionKitCost: 7.53,
-      feltConnectionKitCost: 0.51,
-      drillBitCost: 11.81,
-      variaPunchToolCost: 19.22,
-      C1cableKitCost: 13.70,
-      C2cableKitCost: 15.50,
+      variaConnectionKitCost: 8.21,
+      feltConnectionKitCost: 0.56,
+      drillBitCost: 12.88,
+      variaPunchToolCost: 20.95,
+      C1cableKitCost: 14.93,
+      C2cableKitCost: 16.90,
     },
   }
 
   public clarioCloudPricingData = {
     partsList: {},
     servicePrices: {
-      sTile: 383.68,
-      ccTile: 390.06,
+      sTile: 460.41,
+      ccTile: 448.57,
     },
     hardwarePrices: {
-      sTile: 54.77,
-      ccTile: 48.63,
+      sTile: 65.73,
+      ccTile: 55.92,
     },
     productsPrices: {
-      sTile: 88.77,
-      ccTile: 88.77,
+      sTile: 106.52,
+      ccTile: 102.08,
     }
   }
 
