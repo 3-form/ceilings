@@ -582,7 +582,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'Saffron',
           hex: '#983122',
-          sheet_part_id: ''
+          sheet_part_id: '0-51-977'
         },
         jasper: {
           material: 'jasper',
@@ -618,7 +618,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'Ochre',
           hex: '#ae7d31',
-          sheet_part_id: ''
+          sheet_part_id: '0-51-973'
         },
         mustard: {
           material: 'mustard',
@@ -627,7 +627,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'Mustard',
           hex: '#b59c38',
-          sheet_part_id: ''
+          sheet_part_id: '0-51-974'
         },
         admiral: {
           material: 'admiral',
@@ -654,7 +654,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'Steelblue',
           hex: '#7699d',
-          sheet_part_id: ''
+          sheet_part_id: '0-51-975'
         },
         emerald: {
           material: 'emerald',
@@ -699,7 +699,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'steel',
           hex: '#767779',
-          sheet_part_id: ''
+          sheet_part_id: '0-51-976'
         },
         platinum: {
           material: 'platinum',
@@ -708,7 +708,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'Platinum',
           hex: '#939c99',
-          sheet_part_id: ''
+          sheet_part_id: '0-51-979'
         },
         mineral: {
           material: 'mineral',
@@ -762,7 +762,7 @@ export class MaterialsService {
           available_until: '',
           name_str: 'Silt',
           hex: '#584e45',
-          sheet_part_id: ''
+          sheet_part_id: '0-51-978'
         },
         ebony: {
           material: 'ebony',
