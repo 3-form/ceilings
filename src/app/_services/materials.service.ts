@@ -575,6 +575,15 @@ export class MaterialsService {
   public materials = {
     felt: {
       sola: {
+        saffron: {
+          material: 'saffron',
+          image: '/assets/images/materials/felt/sola/saffron.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'Saffron',
+          hex: '#983122',
+          sheet_part_id: '0-51-977'
+        },
         jasper: {
           material: 'jasper',
           image: '/assets/images/materials/felt/sola/jasper.png',
@@ -602,6 +611,24 @@ export class MaterialsService {
           hex: '#ffcc43',
           sheet_part_id: '0-51-918'
         },
+        ochre: {
+          material: 'ochre',
+          image: '/assets/images/materials/felt/sola/ochre.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'Ochre',
+          hex: '#ae7d31',
+          sheet_part_id: '0-51-973'
+        },
+        mustard: {
+          material: 'mustard',
+          image: '/assets/images/materials/felt/sola/mustard.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'Mustard',
+          hex: '#b59c38',
+          sheet_part_id: '0-51-974'
+        },
         admiral: {
           material: 'admiral',
           image: '/assets/images/materials/felt/sola/admiral.png',
@@ -620,6 +647,15 @@ export class MaterialsService {
           hex: '#4e6477',
           sheet_part_id: '0-51-969'
         },
+        steelblue: {
+          material: 'steelblue',
+          image: '/assets/images/materials/felt/sola/steelblue.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'Steelblue',
+          hex: '#7699d',
+          sheet_part_id: '0-51-975'
+        },
         emerald: {
           material: 'emerald',
           image: '/assets/images/materials/felt/sola/emerald.png',
@@ -629,19 +665,10 @@ export class MaterialsService {
           hex: '#273c39',
           sheet_part_id: '0-51-968'
         },
-        driftwood: {
-          material: 'driftwood',
-          image: '/assets/images/materials/felt/sola/driftwood.png',
-          status: 'active',
-          available_until: '',
-          name_str: 'Driftwood',
-          hex: '#9a8979',
-          sheet_part_id: '0-51-967'
-        },
         zinc: {
           material: 'zinc',
           image: '/assets/images/materials/felt/sola/zinc.png',
-          status: 'active',
+          status: 'inactive',
           available_until: '',
           name_str: 'Zinc',
           hex: '#ededf1',
@@ -656,14 +683,32 @@ export class MaterialsService {
           hex: '#d1d1d8',
           sheet_part_id: '0-51-926'
         },
-        armor: {
-          material: 'armor',
-          image: '/assets/images/materials/felt/sola/armor.png',
+        driftwood: {
+          material: 'driftwood',
+          image: '/assets/images/materials/felt/sola/driftwood.png',
           status: 'active',
           available_until: '',
-          name_str: 'Armor',
-          hex: '#8d8d96',
-          sheet_part_id: '0-51-924'
+          name_str: 'Driftwood',
+          hex: '#9a8979',
+          sheet_part_id: '0-51-967'
+        },
+        steel: {
+          material: 'steel',
+          image: '/assets/images/materials/felt/sola/steel.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'steel',
+          hex: '#767779',
+          sheet_part_id: '0-51-976'
+        },
+        platinum: {
+          material: 'platinum',
+          image: '/assets/images/materials/felt/sola/platinum.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'Platinum',
+          hex: '#939c99',
+          sheet_part_id: '0-51-979'
         },
         mineral: {
           material: 'mineral',
@@ -673,6 +718,15 @@ export class MaterialsService {
           name_str: 'Mineral',
           hex: '#636163',
           sheet_part_id: '0-51-923'
+        },
+        armor: {
+          material: 'armor',
+          image: '/assets/images/materials/felt/sola/armor.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'Armor',
+          hex: '#8d8d96',
+          sheet_part_id: '0-51-924'
         },
         cast: {
           material: 'cast',
@@ -700,6 +754,15 @@ export class MaterialsService {
           name_str: 'Moon',
           hex: '#cccce0',
           sheet_part_id: '0-51-922'
+        },
+        silt: {
+          material: 'silt',
+          image: '/assets/images/materials/felt/sola/silt.png',
+          status: 'active',
+          available_until: '',
+          name_str: 'Silt',
+          hex: '#584e45',
+          sheet_part_id: '0-51-978'
         },
         ebony: {
           material: 'ebony',
