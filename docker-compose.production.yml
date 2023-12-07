@@ -26,10 +26,10 @@ services:
         # Secure redirect
         - traefik.http.routers.design-redirect.rule=Host(`design.3-form.com`, `ceilings.3-form.com`, `seeyond.3-form.com`)
         - traefik.http.routers.design-redirect.entrypoints=web
-        - traefik.http.routers.design-redirect.middlewares=redirect@file
+        - traefik.http.routers.design-redirect.middlewares=redirect@file, stripHeaders@file
         # Secure
         - traefik.http.routers.design.rule=Host(`design.3-form.com`, `ceilings.3-form.com`, `seeyond.3-form.com`)
-        - traefik.http.routers.design.middlewares=ceilings-redirect@docker, seeyond-redirect@docker
+        - traefik.http.routers.design.middlewares=ceilings-redirect@docker, seeyond-redirect@docker, stripHeaders@file
         - traefik.http.routers.design.entrypoints=websecure
         - traefik.http.routers.design.tls=true
         - traefik.http.services.design.loadbalancer.server.port=80
