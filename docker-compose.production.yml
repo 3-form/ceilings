@@ -4,6 +4,12 @@ services:
     image: "registry.3-form.com/design:${DOCKER_IMAGE_TAG:-latest}"
     environment:
       TZ: America/Denver
+    healthcheck:
+      test: 'curl -IsS http://localhost:80 || exit 1'
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     networks:
       - webgateway
     deploy:
